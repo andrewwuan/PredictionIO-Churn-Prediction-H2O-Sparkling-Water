@@ -31,12 +31,65 @@ class DataSource(val dsp: DataSourceParams)
       eventNames = Some(List("EVENT")),
       targetEntityType = Some(Some("TARGET_ENTITY_TYPE")))(sc)
 
-    new TrainingData(eventsRDD)
+    val customersRDD: RDD[Customer] = eventsRDD.map { event =>
+      val customer = try {
+        event.event match {
+          case "customer" =>
+            Customer(event.entityId,
+              event.intlPlan.get,
+              event.voiceMailPlan.get,
+              event.numVmailMsg.get,
+              event.totalDayMins.get,
+              event.totalDayCalls.get,
+              event.totalDayCharge.get,
+              event.totalEveMins.get,
+              event.totalEveCalls.get,
+              event.totalEveCharge.get,
+              event.totalNightMins.get,
+              event.totalNightCalls.get,
+              event.totalNightCharge.get,
+              event.totalIntlMins.get,
+              event.totalIntlCalls.get,
+              event.totalIntlCharge.get,
+              event.customerServiceCalls.get,
+              event.churn.get)
+          case _ => throw new Exception(s"Unexpected event ${event} is read.")
+        } catch {
+          case e: Exception => {
+            logger.error(s"Cannot convert ${event} to Rating. Exception: ${e}.")
+            throw e
+          }
+        }
+        customer
+    }.cache()
+
+    new TrainingData(customersRDD)
   }
 }
 
+case class Customer(
+  id: Long,
+  intlPlan: Boolean,
+  voiceMailPlan: Boolean,
+  numVmailMsg: Long,
+  totalDayMins: Double,
+  totalDayCalls: Long,
+  totalDayCharge: Double,
+  totalEveMins: Double,
+  totalEveCalls: Long,
+  totalEveCharge: Double,
+  totalNightMins: Double,
+  totalNightCalls: Long,
+  totalNightCharge: Double,
+  totalIntlMins: Double,
+  totalIntlCalls: Long,
+  totalIntlCharge: Double,
+  customerServiceCalls: Long,
+  churn: Boolean
+)
+
 class TrainingData(
-  val events: RDD[Event]
+  val customers: RDD[Event]
 ) extends Serializable {
   override def toString = {
     s"events: [${events.count()}] (${events.take(2).toList}...)"
