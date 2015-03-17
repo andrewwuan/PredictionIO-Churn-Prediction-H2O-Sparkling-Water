@@ -27,40 +27,40 @@ class DataSource(val dsp: DataSourceParams)
     // read all events of EVENT involving ENTITY_TYPE and TARGET_ENTITY_TYPE
     val eventsRDD: RDD[Event] = eventsDb.find(
       appId = dsp.appId,
-      entityType = Some("ENTITY_TYPE"),
-      eventNames = Some(List("EVENT")),
-      targetEntityType = Some(Some("TARGET_ENTITY_TYPE")))(sc)
+      entityType = Some("customer"),
+      eventNames = Some(List("customer")))(sc)
 
     val customersRDD: RDD[Customer] = eventsRDD.map { event =>
       val customer = try {
         event.event match {
           case "customer" =>
             Customer(event.entityId,
-              event.intlPlan.get,
-              event.voiceMailPlan.get,
-              event.numVmailMsg.get,
-              event.totalDayMins.get,
-              event.totalDayCalls.get,
-              event.totalDayCharge.get,
-              event.totalEveMins.get,
-              event.totalEveCalls.get,
-              event.totalEveCharge.get,
-              event.totalNightMins.get,
-              event.totalNightCalls.get,
-              event.totalNightCharge.get,
-              event.totalIntlMins.get,
-              event.totalIntlCalls.get,
-              event.totalIntlCharge.get,
-              event.customerServiceCalls.get,
-              event.churn.get)
+              event.properties.get[Boolean]("intl_plan"),
+              event.properties.get[Boolean]("voice_mail_plan"),
+              event.properties.get[Long]("num_vmail_msg"),
+              event.properties.get[Double]("total_day_mins"),
+              event.properties.get[Long]("total_day_calls"),
+              event.properties.get[Double]("total_day_charge"),
+              event.properties.get[Double]("total_eve_mins"),
+              event.properties.get[Long]("total_eve_calls"),
+              event.properties.get[Double]("total_eve_charge"),
+              event.properties.get[Double]("total_night_mins"),
+              event.properties.get[Long]("total_night_calls"),
+              event.properties.get[Double]("total_night_charge"),
+              event.properties.get[Double]("total_intl_mins"),
+              event.properties.get[Long]("total_intl_calls"),
+              event.properties.get[Double]("total_intl_charge"),
+              event.properties.get[Long]("customer_service_calls"),
+              event.properties.get[Boolean]("churn"))
           case _ => throw new Exception(s"Unexpected event ${event} is read.")
-        } catch {
-          case e: Exception => {
-            logger.error(s"Cannot convert ${event} to Rating. Exception: ${e}.")
-            throw e
-          }
         }
-        customer
+      } catch {
+        case e: Exception => {
+          logger.error(s"Cannot convert ${event} to Rating. Exception: ${e}.")
+          throw e
+        }
+      }
+      customer
     }.cache()
 
     new TrainingData(customersRDD)
@@ -68,7 +68,7 @@ class DataSource(val dsp: DataSourceParams)
 }
 
 case class Customer(
-  id: Long,
+  id: String,
   intlPlan: Boolean,
   voiceMailPlan: Boolean,
   numVmailMsg: Long,
@@ -89,9 +89,9 @@ case class Customer(
 )
 
 class TrainingData(
-  val customers: RDD[Event]
+  val customers: RDD[Customer]
 ) extends Serializable {
   override def toString = {
-    s"events: [${events.count()}] (${events.take(2).toList}...)"
+    s"customers: [${customers.count()}] (${customers.take(2).toList}...)"
   }
 }

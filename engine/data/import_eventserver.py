@@ -3,6 +3,7 @@ Import churn-orange-train data for sparkling water engine
 """
 
 import predictionio
+import argparse
 import csv
 
 def import_events(client, file):
@@ -18,25 +19,28 @@ def import_events(client, file):
         client.create_event(
             event = 'customer',
             entity_type = 'customer',
-            entity_id = customer_id++,
-            intl_plan = True if (row[3] == 'Yes') else False,
-            voice_mail_plan = True if (row[4] == 'Yes') else False,
-            num_vmail_msg = int(row[5]),
-            total_day_mins = float(row[6]),
-            total_day_calls = int(row[7]),
-            total_day_charge = float(row[8]),
-            total_eve_mins = float(row[9]),
-            total_eve_calls = int(row[10]),
-            total_eve_charge = float(row[11]),
-            total_night_mins = float(row[12]),
-            total_night_calls = int(row[13]),
-            total_night_charge = float(row[14]),
-            total_intl_mins = float(row[15]),
-            total_intl_calls = int(row[16]),
-            total_intl_charge = float(row[17]),
-            customer_service_calls = int(row[18]),
-            churn = True if (row[19] == 'True') else False
+            entity_id = str(customer_id),
+            properties = {
+                'intl_plan': True if (row[3] == 'Yes') else False,
+                'voice_mail_plan': True if (row[4] == 'Yes') else False,
+                'num_vmail_msg': int(row[5]),
+                'total_day_mins': float(row[6]),
+                'total_day_calls': int(row[7]),
+                'total_day_charge': float(row[8]),
+                'total_eve_mins': float(row[9]),
+                'total_eve_calls': int(row[10]),
+                'total_eve_charge': float(row[11]),
+                'total_night_mins': float(row[12]),
+                'total_night_calls': int(row[13]),
+                'total_night_charge': float(row[14]),
+                'total_intl_mins': float(row[15]),
+                'total_intl_calls': int(row[16]),
+                'total_intl_charge': float(row[17]),
+                'customer_service_calls': int(row[18]),
+                'churn': True if (row[19] == 'True') else False
+            }
         )
+        customer_id += 1
 
     f.close()
     print "%d users are imported." % (customer_id - 1)

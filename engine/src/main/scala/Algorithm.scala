@@ -21,7 +21,7 @@ class Algorithm(val ap: AlgorithmParams)
     // Simply count number of events
     // and multiple it by the algorithm parameter
     // and store the number as model
-    val count = data.events.count().toInt * ap.mult
+    val count = data.customers.count().toInt * ap.mult
     new Model(mc = count)
   }
 
