@@ -3,9 +3,14 @@ package org.template.vanilla
 import io.prediction.controller.P2LAlgorithm
 import io.prediction.controller.Params
 
+import hex.deeplearning.DeepLearning
+import hex.deeplearning.DeepLearningModel
+import hex.deeplearning.DeepLearningModel.DeepLearningParameters
 import org.apache.spark.SparkContext
 import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
+import org.apache.spark.sql.{SQLContext, SchemaRDD}
+import org.apache.spark.h2o._
 
 import grizzled.slf4j.Logger
 
@@ -18,20 +23,63 @@ class Algorithm(val ap: AlgorithmParams)
   @transient lazy val logger = Logger[this.type]
 
   def train(data: PreparedData): Model = {
-    // Simply count number of events
-    // and multiple it by the algorithm parameter
-    // and store the number as model
-    val count = data.customers.count().toInt * ap.mult
-    new Model(mc = count)
+
+    val h2oContext = new H2OContext(data.customers.context).start()
+    import h2oContext._
+
+    val sqlContext = new SQLContext(data.customers.context);
+    import sqlContext._
+
+    // -- TODO: Import other tables too
+    data.customers.registerTempTable("Customers")
+
+    //
+    // -- TODO: Select useful data and join tables
+    //
+    val customers: RDD[Customer] = data.customers;
+    val query = "SELECT * FROM customers"
+    val table = sql(query)
+
+    //
+    // -- Run DeepLearning
+    //
+    val dlParams = new DeepLearningParameters()
+    dlParams._train = table( 'intlPlan, 'voiceMailPlan, 'numVmailMsg,
+        'totalDayMins, 'totalDayCalls, 'totalDayCharge,
+        'totalEveMins, 'totalEveCalls, 'totalEveCharge,
+        'totalNightMins, 'totalNightCalls, 'totalNightCharge,
+        'totalIntlMins, 'totalIntlCalls, 'totalIntlCharge,
+        'customerServiceCalls, 'churn)
+    dlParams._response_column = 'churn
+    dlParams._epochs = 100
+
+    val dl = new DeepLearning(dlParams)
+    new Model(dlModel = dl.trainModel.get, table = table, h2oContext = h2oContext)
+
   }
 
   def predict(model: Model, query: Query): PredictedResult = {
-    // Prefix the query with the model data
-    val result = s"${model.mc}-${query.q}"
-    PredictedResult(p = result)
+
+    //
+    // -- Make prediction
+    //
+    import model.h2oContext._
+    val predictionH2OFrame = model.dlModel.score(model.table)('predict)
+    val predictionFromModel = toRDD[DoubleHolder](predictionH2OFrame)
+        .map( _.result.getOrElse(Double.NaN) ).collect
+
+    //
+    // -- Build response
+    //
+    val buf = new StringBuilder
+    predictionFromModel.take(10).foreach(line => buf ++= line.toString)
+    val prediction = buf.toString
+
+    PredictedResult(p = prediction)
   }
 }
 
-class Model(val mc: Int) extends Serializable {
-  override def toString = s"mc=${mc}"
+class Model(val dlModel: DeepLearningModel, val table: SchemaRDD,
+    val h2oContext: H2OContext)
+    extends Serializable {
 }
