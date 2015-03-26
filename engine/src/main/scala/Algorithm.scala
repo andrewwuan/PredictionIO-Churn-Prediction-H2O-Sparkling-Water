@@ -11,6 +11,7 @@ import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.{SQLContext, SchemaRDD}
 import org.apache.spark.h2o._
+import water.fvec.Frame
 
 import grizzled.slf4j.Logger
 
@@ -22,9 +23,9 @@ class Algorithm(val ap: AlgorithmParams)
 
   @transient lazy val logger = Logger[this.type]
 
-  def train(data: PreparedData): Model = {
+  def train(sc: SparkContext, data: PreparedData): Model = {
 
-    val h2oContext = new H2OContext(data.customers.context).start()
+    val h2oContext = new H2OContext(sc).start()
     import h2oContext._
 
     val sqlContext = new SQLContext(data.customers.context);
