@@ -9,9 +9,7 @@ import hex.deeplearning.DeepLearningModel.DeepLearningParameters
 import org.apache.spark.SparkContext
 import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
-import org.apache.spark.sql.{SQLContext, SchemaRDD}
 import org.apache.spark.h2o._
-import water.fvec.Frame
 
 import grizzled.slf4j.Logger
 
@@ -28,34 +26,22 @@ class Algorithm(val ap: AlgorithmParams)
     val h2oContext = new H2OContext(sc).start()
     import h2oContext._
 
-    val sqlContext = new SQLContext(data.customers.context);
-    import sqlContext._
-
-    // -- TODO: Import other tables too
-    data.customers.registerTempTable("Customers")
-
     //
-    // -- TODO: Select useful data and join tables
+    // -- TODO: more ways to filter & combine data
     //
-    val customers: RDD[Customer] = data.customers;
-    val query = "SELECT * FROM customers"
-    val table = sql(query)
+    val customerTable: DataFrame = createDataFrame(data.customers);
 
     //
     // -- Run DeepLearning
     //
     val dlParams = new DeepLearningParameters()
-    dlParams._train = table( 'intlPlan, 'voiceMailPlan, 'numVmailMsg,
-        'totalDayMins, 'totalDayCalls, 'totalDayCharge,
-        'totalEveMins, 'totalEveCalls, 'totalEveCharge,
-        'totalNightMins, 'totalNightCalls, 'totalNightCharge,
-        'totalIntlMins, 'totalIntlCalls, 'totalIntlCharge,
-        'customerServiceCalls, 'churn)
+    dlParams._train = customerTable
     dlParams._response_column = 'churn
     dlParams._epochs = 100
 
     val dl = new DeepLearning(dlParams)
-    new Model(dlModel = dl.trainModel.get, table = table, h2oContext = h2oContext)
+    new Model(dlModel = dl.trainModel.get, table = customerTable, 
+        h2oContext = h2oContext)
 
   }
 
@@ -80,7 +66,7 @@ class Algorithm(val ap: AlgorithmParams)
   }
 }
 
-class Model(val dlModel: DeepLearningModel, val table: SchemaRDD,
+class Model(val dlModel: DeepLearningModel, val table: DataFrame,
     val h2oContext: H2OContext)
     extends Serializable {
 }
