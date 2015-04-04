@@ -34,24 +34,24 @@ class DataSource(val dsp: DataSourceParams)
       val customer = try {
         event.event match {
           case "customer" =>
-            Customer(event.entityId,
-              event.properties.get[Boolean]("intl_plan"),
-              event.properties.get[Boolean]("voice_mail_plan"),
-              event.properties.get[Long]("num_vmail_msg"),
-              event.properties.get[Double]("total_day_mins"),
-              event.properties.get[Long]("total_day_calls"),
-              event.properties.get[Double]("total_day_charge"),
-              event.properties.get[Double]("total_eve_mins"),
-              event.properties.get[Long]("total_eve_calls"),
-              event.properties.get[Double]("total_eve_charge"),
-              event.properties.get[Double]("total_night_mins"),
-              event.properties.get[Long]("total_night_calls"),
-              event.properties.get[Double]("total_night_charge"),
-              event.properties.get[Double]("total_intl_mins"),
-              event.properties.get[Long]("total_intl_calls"),
-              event.properties.get[Double]("total_intl_charge"),
-              event.properties.get[Long]("customer_service_calls"),
-              event.properties.get[Boolean]("churn"))
+            Customer(Some(event.entityId),
+              Some(event.properties.get[Boolean]("intl_plan")),
+              Some(event.properties.get[Boolean]("voice_mail_plan")),
+              Some(event.properties.get[Long]("num_vmail_msg")),
+              Some(event.properties.get[Double]("total_day_mins")),
+              Some(event.properties.get[Long]("total_day_calls")),
+              Some(event.properties.get[Double]("total_day_charge")),
+              Some(event.properties.get[Double]("total_eve_mins")),
+              Some(event.properties.get[Long]("total_eve_calls")),
+              Some(event.properties.get[Double]("total_eve_charge")),
+              Some(event.properties.get[Double]("total_night_mins")),
+              Some(event.properties.get[Long]("total_night_calls")),
+              Some(event.properties.get[Double]("total_night_charge")),
+              Some(event.properties.get[Double]("total_intl_mins")),
+              Some(event.properties.get[Long]("total_intl_calls")),
+              Some(event.properties.get[Double]("total_intl_charge")),
+              Some(event.properties.get[Long]("customer_service_calls")),
+              Some(event.properties.get[Boolean]("churn")))
           case _ => throw new Exception(s"Unexpected event ${event} is read.")
         }
       } catch {
@@ -67,26 +67,26 @@ class DataSource(val dsp: DataSourceParams)
   }
 }
 
-case class Customer(
-  id: String,
-  intlPlan: Boolean,
-  voiceMailPlan: Boolean,
-  numVmailMsg: Long,
-  totalDayMins: Double,
-  totalDayCalls: Long,
-  totalDayCharge: Double,
-  totalEveMins: Double,
-  totalEveCalls: Long,
-  totalEveCharge: Double,
-  totalNightMins: Double,
-  totalNightCalls: Long,
-  totalNightCharge: Double,
-  totalIntlMins: Double,
-  totalIntlCalls: Long,
-  totalIntlCharge: Double,
-  customerServiceCalls: Long,
-  churn: Boolean
-)
+ case class Customer(
+  id: Some[String],
+  intlPlan: Some[Boolean],
+  voiceMailPlan: Some[Boolean],
+  numVmailMsg: Some[Long],
+  totalDayMins: Some[Double],
+  totalDayCalls: Some[Long],
+  totalDayCharge: Some[Double],
+  totalEveMins: Some[Double],
+  totalEveCalls: Some[Long],
+  totalEveCharge: Some[Double],
+  totalNightMins: Some[Double],
+  totalNightCalls: Some[Long],
+  totalNightCharge: Some[Double],
+  totalIntlMins: Some[Double],
+  totalIntlCalls: Some[Long],
+  totalIntlCharge: Some[Double],
+  customerServiceCalls: Some[Long],
+  churn: Some[Boolean]
+) extends Serializable
 
 class TrainingData(
   val customers: RDD[Customer]
