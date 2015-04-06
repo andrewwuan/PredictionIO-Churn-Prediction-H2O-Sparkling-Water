@@ -67,7 +67,7 @@ class DataSource(val dsp: DataSourceParams)
   }
 }
 
- case class Customer(
+@SerialVersionUID(9129684718267757690L) case class Customer(
   id: Some[String],
   intlPlan: Some[Boolean],
   voiceMailPlan: Some[Boolean],
@@ -86,7 +86,7 @@ class DataSource(val dsp: DataSourceParams)
   totalIntlCharge: Some[Double],
   customerServiceCalls: Some[Long],
   churn: Some[Boolean]
-) extends Serializable
+)
 
 class TrainingData(
   val customers: RDD[Customer]

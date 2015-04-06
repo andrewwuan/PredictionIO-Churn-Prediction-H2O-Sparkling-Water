@@ -2,6 +2,7 @@ package org.template.vanilla
 
 import io.prediction.controller.P2LAlgorithm
 import io.prediction.controller.Params
+import io.prediction.controller.IPersistentModel
 
 import hex.deeplearning.DeepLearning
 import hex.deeplearning.DeepLearningModel
@@ -68,5 +69,8 @@ class Algorithm(val ap: AlgorithmParams)
 
 class Model(val dlModel: DeepLearningModel, val table: DataFrame,
     val h2oContext: H2OContext)
-    extends Serializable {
+    extends IPersistentModel[Params] {
+    def save(id: String, params: Params, sc: SparkContext): Boolean = {
+        false
+    }
 }
