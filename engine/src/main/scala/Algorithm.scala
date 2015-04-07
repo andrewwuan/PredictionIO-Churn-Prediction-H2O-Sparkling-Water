@@ -14,7 +14,8 @@ import org.apache.spark.h2o._
 
 import grizzled.slf4j.Logger
 
-case class AlgorithmParams(mult: Int) extends Params
+case class AlgorithmParams(
+    epochs: Int) extends Params
 
 class Algorithm(val ap: AlgorithmParams)
   // extends PAlgorithm if Model contains RDD[]
@@ -38,11 +39,10 @@ class Algorithm(val ap: AlgorithmParams)
     val dlParams = new DeepLearningParameters()
     dlParams._train = customerTable
     dlParams._response_column = 'churn
-    dlParams._epochs = 100
+    dlParams._epochs = ap.epochs
 
     val dl = new DeepLearning(dlParams)
-    new Model(dlModel = dl.trainModel.get, table = customerTable, 
-        h2oContext = h2oContext)
+    new Model(dlModel = dl.trainModel.get, sc = sc, h2oContext = h2oContext)
 
   }
 
@@ -52,25 +52,36 @@ class Algorithm(val ap: AlgorithmParams)
     // -- Make prediction
     //
     import model.h2oContext._
-    val predictionH2OFrame = model.dlModel.score(model.table)('predict)
+
+    // Build customer from query and convert into data frame
+    val customerFromQuery = Customer(
+        None, Some(query.intlPlan), Some(query.voiceMailPlan),
+        Some(query.numVmailMsg),
+        Some(query.totalDayMins), Some(query.totalDayCalls),
+        Some(query.totalDayCharge), Some(query.totalEveMins),
+        Some(query.totalEveCalls), Some(query.totalEveCharge),
+        Some(query.totalNightMins), Some(query.totalNightCalls),
+        Some(query.totalNightCharge), Some(query.totalIntlMins),
+        Some(query.totalIntlCalls), Some(query.totalIntlCharge),
+        Some(query.customerServiceCalls), None)
+    val customerQueryRDD = model.sc.parallelize(Array(customerFromQuery))
+    val customerQueryDataFrame = createDataFrame(customerQueryRDD)
+
+    // Predict using the data frame made
+    val predictionH2OFrame = model.dlModel.score(customerQueryDataFrame)('predict)
     val predictionFromModel = toRDD[DoubleHolder](predictionH2OFrame)
         .map( _.result.getOrElse(Double.NaN) ).collect
 
-    //
-    // -- Build response
-    //
-    val buf = new StringBuilder
-    predictionFromModel.take(10).foreach(line => buf ++= line.toString)
-    val prediction = buf.toString
-
-    PredictedResult(p = prediction)
+    PredictedResult(p = predictionFromModel(0).toString)
   }
 }
 
-class Model(val dlModel: DeepLearningModel, val table: DataFrame,
+class Model(val dlModel: DeepLearningModel, val sc: SparkContext,
     val h2oContext: H2OContext)
-    extends IPersistentModel[Params] {
-    def save(id: String, params: Params, sc: SparkContext): Boolean = {
+    extends IPersistentModel[AlgorithmParams] {
+
+    // Sparkling water models are not deserialization-friendly
+    def save(id: String, params: AlgorithmParams, sc: SparkContext): Boolean = {
         false
     }
 }

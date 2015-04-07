@@ -11,7 +11,7 @@
     {
       "name": "algo",
       "params": {
-        "mult" : 1
+        "epochs" : 1
       }
     }
   ]
