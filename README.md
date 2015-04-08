@@ -9,7 +9,7 @@ This is an engine template for [PredictionIO](http://prediction.io/) with [Spark
 * Run `pio-start-all` to start the PredictionIO environment.
 * Run `pio app new [app-name]` to create a new application in PredictionIO.
 * Update `engine.json` with the new App ID acquired from last step.
-* Import the data set with `python data/import_eventserver.py --access_key [app-access-key]`. The data set should be downloaded [here](https://www.dropbox.com/s/ih68jrlk2tnqmbu/churn-orange-train.csv?dl=0) and kept in `data` directory.
+* Import the data set with `python data/import_eventserver.py --access_key [app-access-key]`.
 * Configure Deep Learning algorithm parameters in engine.json.
 * Run PredictionIO (`pio build && pio train && pio deploy`)
 
