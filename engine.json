@@ -1,10 +1,10 @@
 {
   "id": "default",
   "description": "Default settings",
-  "engineFactory": "org.template.vanilla.VanillaEngine",
+  "engineFactory": "VanillaEngine",
   "datasource": {
     "params" : {
-      "appId": 1
+      "appName": "INVALID_APPNAME"
     }
   },
   "algorithms": [

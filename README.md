@@ -8,7 +8,7 @@ This is an engine template for [PredictionIO](http://prediction.io/) with [Spark
 * Please follow [Install PredictionIO](http://docs.prediction.io/install/) and [Download Engine Template](http://docs.prediction.io/start/download/) first for the initial setup.
 * Run `pio-start-all` to start the PredictionIO environment.
 * Run `pio app new [app-name]` to create a new application in PredictionIO.
-* Update `engine.json` with the new App ID acquired from last step.
+* Update `engine.json` with the new App Name acquired from last step.
 * Import the data set with `python data/import_eventserver.py --access_key [app-access-key]`.
 * Configure Deep Learning algorithm parameters in engine.json.
 * Run PredictionIO (`pio build && pio train && pio deploy`)

@@ -1,5 +1,3 @@
-package org.template.vanilla
-
 import io.prediction.controller.LServing
 
 class Serving

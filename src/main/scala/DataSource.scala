@@ -1,19 +1,11 @@
-package org.template.vanilla
-
-import io.prediction.controller.PDataSource
-import io.prediction.controller.EmptyEvaluationInfo
-import io.prediction.controller.EmptyActualResult
-import io.prediction.controller.Params
+import grizzled.slf4j.Logger
+import io.prediction.controller.{EmptyActualResult, EmptyEvaluationInfo, PDataSource, Params}
 import io.prediction.data.storage.Event
-import io.prediction.data.storage.Storage
-
+import io.prediction.data.store.PEventStore
 import org.apache.spark.SparkContext
-import org.apache.spark.SparkContext._
 import org.apache.spark.rdd.RDD
 
-import grizzled.slf4j.Logger
-
-case class DataSourceParams(appId: Int) extends Params
+case class DataSourceParams(appName: String) extends Params
 
 class DataSource(val dsp: DataSourceParams)
   extends PDataSource[TrainingData,
@@ -23,10 +15,10 @@ class DataSource(val dsp: DataSourceParams)
 
   override
   def readTraining(sc: SparkContext): TrainingData = {
-    val eventsDb = Storage.getPEvents()
+
     // read all events of EVENT involving ENTITY_TYPE and TARGET_ENTITY_TYPE
-    val eventsRDD: RDD[Event] = eventsDb.find(
-      appId = dsp.appId,
+    val eventsRDD: RDD[Event] = PEventStore.find(
+      appName = dsp.appName,
       entityType = Some("customer"),
       eventNames = Some(List("customer")))(sc)
 
@@ -68,29 +60,29 @@ class DataSource(val dsp: DataSourceParams)
 }
 
 @SerialVersionUID(9129684718267757690L) case class Customer(
-  id: Option[String],
-  intlPlan: Option[Boolean],
-  voiceMailPlan: Option[Boolean],
-  numVmailMsg: Option[Long],
-  totalDayMins: Option[Double],
-  totalDayCalls: Option[Long],
-  totalDayCharge: Option[Double],
-  totalEveMins: Option[Double],
-  totalEveCalls: Option[Long],
-  totalEveCharge: Option[Double],
-  totalNightMins: Option[Double],
-  totalNightCalls: Option[Long],
-  totalNightCharge: Option[Double],
-  totalIntlMins: Option[Double],
-  totalIntlCalls: Option[Long],
-  totalIntlCharge: Option[Double],
-  customerServiceCalls: Option[Long],
-  churn: Option[Boolean]
-) extends Serializable
+                                                             id: Option[String],
+                                                             intlPlan: Option[Boolean],
+                                                             voiceMailPlan: Option[Boolean],
+                                                             numVmailMsg: Option[Long],
+                                                             totalDayMins: Option[Double],
+                                                             totalDayCalls: Option[Long],
+                                                             totalDayCharge: Option[Double],
+                                                             totalEveMins: Option[Double],
+                                                             totalEveCalls: Option[Long],
+                                                             totalEveCharge: Option[Double],
+                                                             totalNightMins: Option[Double],
+                                                             totalNightCalls: Option[Long],
+                                                             totalNightCharge: Option[Double],
+                                                             totalIntlMins: Option[Double],
+                                                             totalIntlCalls: Option[Long],
+                                                             totalIntlCharge: Option[Double],
+                                                             customerServiceCalls: Option[Long],
+                                                             churn: Option[Boolean]
+                                                             ) extends Serializable
 
 class TrainingData(
-  val customers: RDD[Customer]
-) extends Serializable {
+                    val customers: RDD[Customer]
+                    ) extends Serializable {
   override def toString = {
     s"customers: [${customers.count()}] (${customers.take(2).toList}...)"
   }
